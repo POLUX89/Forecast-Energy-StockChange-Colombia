@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# MLflow local tracking
+mlruns/
+mlartifacts/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Local secrets
+.env
