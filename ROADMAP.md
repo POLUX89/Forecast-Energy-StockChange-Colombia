@@ -10,17 +10,36 @@ Data source: [SIMEM](https://www.simem.co) / XM S.A. E.S.P. — public API, no a
 
 **Goal:** a reproducible repo whose dataset updates itself every day with zero human intervention.
 
-- [x] Git repo + scaffolding: `pyproject.toml`, dependency lock, linting, tests skeleton
-- [ ] Ingestion module for the SIMEM API (`EC6945`), shared by backfill and daily runs:
+- [x] Git repo + scaffolding: `pyproject.toml`, dependency lock, tests skeleton
+- [x] Ingestion module for the SIMEM API (`EC6945`), shared by backfill and daily runs:
   - requests chunked ≤ 1 month (hard API limit)
   - idempotent upsert keyed by `(CodigoVariable, FechaHora, Version)`
-  - canonical view: latest settlement version (`TXn`) per hour
-- [ ] Backfill script: full history 2015 → today (one-shot, resumable, polite rate limiting)
-- [ ] Daily GitHub Actions workflow (`schedule` ~10:00 UTC = 05:00 COT): fetch a trailing window (last ~7 days) to capture settlement revisions, upsert, auto-commit if data changed
-- [ ] Storage: Parquet partitioned by year + schema validation on every run
-- [ ] README: project description, data source & attribution, how to run locally
+  - canonical view: most mature settlement version per hour, ordered by real
+    publication date rather than by name
+- [x] Backfill of the full history 2015 → today, as a `--backfill` flag on the
+      same module; re-runs are idempotent instead of resumable, with retries,
+      backoff and polite pacing between chunks
+- [x] Daily GitHub Actions workflow (`schedule` 10:00 UTC = 05:00 COT): fetch a
+      trailing 7-day window to capture settlement revisions, upsert, commit only
+      when data changed
+- [x] Storage: Parquet partitioned by year, normalized to a fixed column set and
+      dtypes on every read and write
+- [x] CI: test suite on every push and pull request, installing with a bare
+      `uv sync` to prove ingestion needs no analysis dependencies
+- [x] README: project description, data source & attribution, how to run locally
+- [ ] Linting and formatting (`ruff`) wired into CI
 
-**Done when:** the scheduled workflow has pushed fresh data ≥ 3 consecutive days unattended.
+**Outcome:** 1,107,336 raw records backfilled into 101,256 continuous hourly
+observations from 2015-01-01, with no gaps and no nulls. Two findings that
+changed the design and are worth carrying forward: settlement versions do not
+mature in name order (`TX3`+ are adjustments published *after* the `TXF`
+invoice, and using the naive order left 47% of hours stale), and prices are
+published with a lag of about three days.
+
+**Done when:** the scheduled workflow has pushed fresh data ≥ 3 consecutive days
+unattended. The write path is already proven end to end — a deliberately
+removed two-day gap was detected, refilled and committed by the bot — but the
+unattended streak starts with the first scheduled run on 2026-07-24.
 
 ## Phase 2 — Exploratory data analysis
 
@@ -29,7 +48,11 @@ Data source: [SIMEM](https://www.simem.co) / XM S.A. E.S.P. — public API, no a
 - [ ] Seasonality (24 h / 168 h / annual), trend, distribution, price spikes (El Niño regimes)
 - [ ] Settlement-version study: how much do `TX` revisions actually change published values?
 - [ ] Data quality report: gaps, duplicates, timezone sanity (Colombia has no DST)
-- [ ] `docs/decisions.md`: target series (`PB_Nal`), canonical version rule, outlier policy, forecast horizon (next-day 24 h), train/validation/test time splits
+- [ ] `docs/decisions.md`: target series (`PB_Nal`), canonical version rule,
+      outlier policy, train/validation/test time splits, and two questions the
+      ingestion work surfaced — what "next-day forecast" means when prices
+      arrive three days late, and which settlement vintage belongs in the
+      target versus in the features
 
 **Done when:** `docs/decisions.md` exists and later phases reference it instead of re-deciding.
 
