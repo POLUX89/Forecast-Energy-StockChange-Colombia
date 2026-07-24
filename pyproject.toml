@@ -6,13 +6,17 @@ readme = "README.md"
 authors = [{ name = "Daniel Felipe Sacristan", email = "sacristandanielfelipe@gmail.com" }]
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "pandas>=2.3.3",
+    "pyarrow>=24.0.0",
     "pydataxm>=0.3",
 ]
 
 [dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
 eda = [
     "numpy",
-    "pandas",
     "matplotlib",
     "scipy",
     "statsmodels",
