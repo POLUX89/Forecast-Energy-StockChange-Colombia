@@ -14,6 +14,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "ruff>=0.16.0",
 ]
 eda = [
     "numpy",
@@ -25,6 +26,15 @@ mlops = [
     "scikit-learn",
     "mlflow",
 ]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes (real bugs: unused names, undefined vars),
+# I import sorting, UP syntax modernization, B likely-bug patterns,
+# SIM redundant constructs.
+select = ["E", "W", "F", "I", "UP", "B", "SIM"]
 
 [build-system]
 requires = ["hatchling"]

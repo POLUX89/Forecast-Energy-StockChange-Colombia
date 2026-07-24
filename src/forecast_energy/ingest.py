@@ -147,7 +147,9 @@ def _fetch_chunk(start: date, end: date, retries: int) -> pd.DataFrame:
             last_error = exc
         except Exception as exc:  # network / API hiccups
             last_error = exc
-        logger.warning("Fetch %s..%s failed (attempt %d/%d): %s", start, end, attempt, retries, last_error)
+        logger.warning(
+            "Fetch %s..%s failed (attempt %d/%d): %s", start, end, attempt, retries, last_error
+        )
         time.sleep(2 * attempt)
     raise RuntimeError(f"Could not fetch {start}..{end} after {retries} attempts") from last_error
 
@@ -217,7 +219,12 @@ def build_canonical(raw_dir: Path = RAW_DIR, out_path: Path = CANONICAL_PATH) ->
             logger.info("Canonical table unchanged (%d hours)", len(wide))
             return wide
     wide.to_parquet(out_path, index=False)
-    logger.info("Canonical table written: %d hours, %s..%s", len(wide), wide["datetime"].min(), wide["datetime"].max())
+    logger.info(
+        "Canonical table written: %d hours, %s..%s",
+        len(wide),
+        wide["datetime"].min(),
+        wide["datetime"].max(),
+    )
     return wide
 
 
@@ -230,10 +237,18 @@ def run(start: date, end: date) -> None:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Ingest SIMEM hourly spot prices (EC6945)")
-    parser.add_argument("--backfill", action="store_true", help="fetch full history instead of a recent window")
-    parser.add_argument("--start", type=date.fromisoformat, default=DEFAULT_START, help="backfill start date")
-    parser.add_argument("--end", type=date.fromisoformat, default=None, help="last date to fetch (default: today)")
-    parser.add_argument("--days", type=int, default=7, help="trailing window size for regular updates")
+    parser.add_argument(
+        "--backfill", action="store_true", help="fetch full history instead of a recent window"
+    )
+    parser.add_argument(
+        "--start", type=date.fromisoformat, default=DEFAULT_START, help="backfill start date"
+    )
+    parser.add_argument(
+        "--end", type=date.fromisoformat, default=None, help="last date to fetch (default: today)"
+    )
+    parser.add_argument(
+        "--days", type=int, default=7, help="trailing window size for regular updates"
+    )
     args = parser.parse_args(argv)
 
     # pydataxm logs through the root logger; keep root at WARNING so only this

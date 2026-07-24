@@ -70,8 +70,12 @@ class TestUpsertRaw:
         assert len(stored) == 1
 
     def test_new_version_is_added_and_old_kept(self, tmp_path):
-        ingest.upsert_raw(make_records([("PB_Nal", "2024-01-01 00:00:00", "TX1", 100.0)]), raw_dir=tmp_path)
-        ingest.upsert_raw(make_records([("PB_Nal", "2024-01-01 00:00:00", "TX2", 105.0)]), raw_dir=tmp_path)
+        ingest.upsert_raw(
+            make_records([("PB_Nal", "2024-01-01 00:00:00", "TX1", 100.0)]), raw_dir=tmp_path
+        )
+        ingest.upsert_raw(
+            make_records([("PB_Nal", "2024-01-01 00:00:00", "TX2", 105.0)]), raw_dir=tmp_path
+        )
         stored = pd.read_parquet(tmp_path / "ec6945_2024.parquet")
         assert sorted(stored["Version"]) == ["TX1", "TX2"]
 
@@ -136,7 +140,9 @@ class TestBuildCanonical:
         assert wide.loc[0, "pb_nal"] == 100.0
 
     def test_rebuild_is_stable(self, tmp_path):
-        ingest.upsert_raw(make_records([("PB_Nal", "2024-01-01 00:00:00", "TX1", 100.0)]), raw_dir=tmp_path)
+        ingest.upsert_raw(
+            make_records([("PB_Nal", "2024-01-01 00:00:00", "TX1", 100.0)]), raw_dir=tmp_path
+        )
         out = tmp_path / "canonical.parquet"
         first = ingest.build_canonical(raw_dir=tmp_path, out_path=out)
         mtime = out.stat().st_mtime_ns

@@ -83,6 +83,14 @@ uv run python -m forecast_energy.ingest --backfill   # full history since 2015
 uv run pytest tests/                                 # test suite (no network needed)
 ```
 
+Linting and formatting use [ruff](https://docs.astral.sh/ruff/); CI fails on
+either. Both commands are safe to run repeatedly.
+
+```bash
+uv run ruff check --fix .   # lint, applying the safe fixes
+uv run ruff format .        # format
+```
+
 ## Project structure
 
 ```
