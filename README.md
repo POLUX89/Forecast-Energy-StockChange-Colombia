@@ -91,6 +91,18 @@ uv run ruff check --fix .   # lint, applying the safe fixes
 uv run ruff format .        # format
 ```
 
+## License
+
+The code in this repository is released under the [MIT License](LICENSE).
+
+That licence covers the code only. The price data under `data/` belongs to
+**XM S.A. E.S.P.** and is published on [SIMEM](https://www.simem.co) as open
+data, under CREG Resolution 101 018 of 2022. It is redistributed here
+unmodified in substance, with attribution, to make the analysis reproducible.
+If you reuse it, credit XM/SIMEM as the source rather than this repository, and
+check SIMEM's current terms — they can change, and the authoritative copy is
+always the API.
+
 ## Project structure
 
 ```
