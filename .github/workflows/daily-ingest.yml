@@ -1,0 +1,48 @@
+name: Daily ingest
+
+on:
+  schedule:
+    # 10:00 UTC is 05:00 America/Bogota, an hour after SIMEM's ~04:00 refresh.
+    # GitHub delays scheduled runs under load, which is harmless for a daily job.
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+
+# Narrower than the repository default: this job only needs to write content.
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-ingest
+
+jobs:
+  ingest:
+    name: Fetch and commit new data
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      # A trailing window rather than a single day: XM republishes past hours
+      # under later settlement versions, and prices lag about three days.
+      - name: Fetch recent data
+        run: uv run python -m forecast_energy.ingest --days 7
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "No new data; nothing to commit."
+            exit 0
+          fi
+          git commit -m "data: daily ingest $(date -u +%Y-%m-%d) [skip ci]"
+          git push
