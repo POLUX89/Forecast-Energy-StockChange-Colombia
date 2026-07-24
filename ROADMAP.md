@@ -27,7 +27,7 @@ Data source: [SIMEM](https://www.simem.co) / XM S.A. E.S.P. — public API, no a
 - [x] CI: test suite on every push and pull request, installing with a bare
       `uv sync` to prove ingestion needs no analysis dependencies
 - [x] README: project description, data source & attribution, how to run locally
-- [ ] Linting and formatting (`ruff`) wired into CI
+- [x] Linting and formatting (`ruff`) wired into CI as its own job
 
 **Outcome:** 1,107,336 raw records backfilled into 101,256 continuous hourly
 observations from 2015-01-01, with no gaps and no nulls. Two findings that
