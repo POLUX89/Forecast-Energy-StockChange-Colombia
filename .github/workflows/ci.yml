@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+
+      # uv reads .python-version and installs the interpreter itself.
+      # The default sync includes the dev group, so pytest comes with it.
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests
+        run: uv run pytest tests/ -v
+
+      # The ingestion module must be importable and runnable from a bare
+      # install, without the eda or mlops groups.
+      - name: Check ingestion CLI
+        run: uv run python -m forecast_energy.ingest --help
