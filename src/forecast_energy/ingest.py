@@ -37,7 +37,10 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 from pydataxm.pydatasimem import ReadSIMEM
 
-logger = logging.getLogger(__name__)
+# Named explicitly rather than via __name__: running this as
+# `python -m forecast_energy.ingest` makes __name__ equal "__main__", which
+# would fall outside the "forecast_energy" logger whose level main() raises.
+logger = logging.getLogger("forecast_energy.ingest")
 
 DATASET_ID = "EC6945"
 BOGOTA = ZoneInfo("America/Bogota")

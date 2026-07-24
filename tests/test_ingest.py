@@ -1,5 +1,6 @@
 """Unit tests for the ingestion module. No network access needed."""
 
+import logging
 from datetime import date
 
 import pandas as pd
@@ -25,6 +26,20 @@ def make_records(rows: list[tuple[str, str, str, float]]) -> pd.DataFrame:
             ]
         )
     )
+
+
+class TestLogging:
+    def test_logger_is_under_the_package_namespace(self):
+        # Guards the module against being silenced when run with -m, where
+        # __name__ is "__main__" and main()'s level bump would not reach it.
+        assert ingest.logger.name.startswith("forecast_energy")
+
+    def test_cli_level_bump_reaches_the_module_logger(self):
+        # main() keeps the root logger at WARNING to mute pydataxm, which logs
+        # through it, and raises only the package logger to INFO.
+        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger("forecast_energy").setLevel(logging.INFO)
+        assert ingest.logger.getEffectiveLevel() == logging.INFO
 
 
 class TestMonthChunks:
