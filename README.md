@@ -101,9 +101,12 @@ only if something actually changed. Quiet days finish green without an empty
 commit, and data commits carry `[skip ci]` so they do not trigger the test
 workflow.
 
-`.github/workflows/ci.yml` runs the test suite on every push and pull request.
-It installs with a bare `uv sync`, which also verifies that ingestion works
-without the `eda` and `mlops` dependency groups.
+`.github/workflows/ci.yml` runs on every push and pull request: linting and
+formatting, the test suite with the `sql` group so the DuckDB parity tests run
+rather than skip, and a third job that installs the core dependencies alone and
+runs the ingestion CLI. That last job guards the environment the daily workflow
+actually uses — an import that only resolves inside an optional group would
+otherwise pass CI and break the 05:00 run.
 
 ## Usage
 

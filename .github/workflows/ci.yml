@@ -50,7 +50,24 @@ jobs:
       - name: Run tests
         run: uv run pytest tests/ -v
 
-      # The ingestion module must be importable and runnable from a bare
-      # install, without the eda or mlops groups.
+  # The daily workflow installs with a bare `uv sync`, so something has to prove
+  # ingestion still runs in that environment. The test job cannot: it needs the
+  # sql group for duckdb, and an import that only resolves there would pass CI
+  # and break the 05:00 run. This job is that guarantee, and it is why pandas is
+  # a direct dependency rather than one inherited from pydataxm.
+  ingest-smoke:
+    name: Ingestion on a bare install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+
+      - name: Install core dependencies only
+        run: uv sync --no-default-groups
+
       - name: Check ingestion CLI
         run: uv run python -m forecast_energy.ingest --help
