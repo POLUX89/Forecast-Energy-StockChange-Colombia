@@ -42,8 +42,10 @@ jobs:
 
       # uv reads .python-version and installs the interpreter itself.
       # The default sync includes the dev group, so pytest comes with it.
+      # The sql group brings duckdb, which the SQL parity tests need; without
+      # it those tests skip instead of running.
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --group sql
 
       - name: Run tests
         run: uv run pytest tests/ -v
