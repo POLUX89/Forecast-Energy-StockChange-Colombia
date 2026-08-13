@@ -48,6 +48,49 @@ import pandas as pd
 df = pd.read_parquet("data/processed/spot_price_hourly.parquet")
 ```
 
+## Querying the data with SQL
+
+The parquet files are also queried directly with **DuckDB** — no server, no
+migration, no second copy of the data to keep in sync. The queries live in
+[`sql/`](sql/) and run through a thin wrapper that registers two views: `raw`
+(every settlement version) and `canonical` (one row per hour).
+
+```bash
+uv sync --group sql
+uv run python -m forecast_energy.sql 04_gaps
+uv run python -m forecast_energy.sql 05_volatility --limit 20
+```
+
+| Query | What it answers |
+| --- | --- |
+| [`01_canonical.sql`](sql/01_canonical.sql) | Most mature settlement version per hour, pivoted wide — the SQL twin of `build_canonical()` |
+| [`02_revisions.sql`](sql/02_revisions.sql) | How far a price still moves after first publication, by year |
+| [`03_seasonality.sql`](sql/03_seasonality.sql) | Average price by hour of day × month, as a matrix |
+| [`04_gaps.sql`](sql/04_gaps.sql) | Which hours are missing — returns zero rows on a healthy table |
+| [`05_volatility.sql`](sql/05_volatility.sql) | Monthly dispersion, p10/p50/p90 and a 12-month rolling mean |
+
+The canonical table has **two implementations that must agree**. The pandas one
+is what the daily pipeline runs; the SQL one expresses the same rule as a window
+function:
+
+```python
+# pandas — src/forecast_energy/ingest.py
+df.sort_values("_rank").drop_duplicates(["CodigoVariable", "FechaHora"], keep="last")
+```
+
+```sql
+-- SQL — sql/01_canonical.sql
+QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY "CodigoVariable", "FechaHora"
+    ORDER BY maturity DESC
+) = 1
+```
+
+`tests/test_sql.py::TestCanonicalParity` asserts the two produce the same table,
+including the edge cases that motivated the ranking: a `TX3` adjustment must beat
+the `TXF` invoice, and an unknown version must never win. CI runs them on every
+push, so the SQL is verified code rather than documentation.
+
 ## How the automation works
 
 `.github/workflows/daily-ingest.yml` runs at 10:00 UTC (05:00 America/Bogota),
@@ -58,9 +101,12 @@ only if something actually changed. Quiet days finish green without an empty
 commit, and data commits carry `[skip ci]` so they do not trigger the test
 workflow.
 
-`.github/workflows/ci.yml` runs the test suite on every push and pull request.
-It installs with a bare `uv sync`, which also verifies that ingestion works
-without the `eda` and `mlops` dependency groups.
+`.github/workflows/ci.yml` runs on every push and pull request: linting and
+formatting, the test suite with the `sql` group so the DuckDB parity tests run
+rather than skip, and a third job that installs the core dependencies alone and
+runs the ingestion CLI. That last job guards the environment the daily workflow
+actually uses — an import that only resolves inside an optional group would
+otherwise pass CI and break the 05:00 run.
 
 ## Usage
 
@@ -112,6 +158,7 @@ always the API.
 │   └── processed/       # Canonical analysis-ready table
 ├── docs/                # Decisions log and project docs
 ├── notebooks/           # EDA and experiments (Phase 2+)
-├── src/forecast_energy/ # Package code: ingestion, features, models
+├── sql/                 # Analytical DuckDB queries over the parquet layers
+├── src/forecast_energy/ # Package code: ingestion, SQL runner, features, models
 └── tests/
 ```
