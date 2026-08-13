@@ -137,6 +137,14 @@ uv run ruff check --fix .   # lint, applying the safe fixes
 uv run ruff format .        # format
 ```
 
+## Dataset documentation
+
+[DATASHEET.md](DATASHEET.md) documents the dataset itself, following
+*Datasheets for Datasets*: what an instance is, how the data was collected, the
+settlement-version semantics, and the limitations that should shape any use of
+it — revision magnitude, the three-day lag, and the fact that vintages only
+exist from 2021 onwards.
+
 ## License
 
 The code in this repository is released under the [MIT License](LICENSE).
