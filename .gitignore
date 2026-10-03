@@ -15,8 +15,13 @@ mlartifacts/
 
 # OS / editors
 .DS_Store
-.vscode/
 .idea/
+
+# Share the editor config that keeps everyone aligned with CI, ignore the rest
+# of the local VS Code state.
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # Local secrets
 .env
